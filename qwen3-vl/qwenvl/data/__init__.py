@@ -1,23 +1,26 @@
 import re
 
+"""
+数据集配置文件
+
+配置说明:
+- annotation_path: 标注文件的路径 (JSON 或 JSONL 格式)
+- data_path: 图像文件的根目录路径 (如果标注文件中使用绝对路径，可以留空)
+"""
+
+UNIVERSITY_CROSSVIEW_DATASET = {
+    "annotation_path": "/home/wangcheng/project/RSCC-master/RSCC-master/qwen3-vl/dataset/qwen3vl_train.jsonl",
+    "data_path": "",  # 标注文件中已使用绝对路径
+}
+
 YOUR_CAPTION_DATASET = {
     "annotation_path": "/path/to/your_captions.jsonl",
-    "data_path": "",
-}
-
-RSCC_DATASET = {
-    "annotation_path": "/path/to/rscc_qwenvl_format.jsonl",
-    "data_path": "",
-}
-
-RSCC_SUBSET_DATASET = {
-    "annotation_path": "/path/to/rscc_subset_qwenvl_format.jsonl",
-    "data_path": "",
+    "data_path": "/path/to/images",
 }
 
 data_dict = {
+    "university_crossview": UNIVERSITY_CROSSVIEW_DATASET,
     "your_caption_dataset": YOUR_CAPTION_DATASET,
-    "rscc_subset": RSCC_SUBSET_DATASET,
 }
 
 
@@ -43,7 +46,7 @@ def data_list(dataset_names):
 
 
 if __name__ == "__main__":
-    dataset_names = ["your_caption_dataset%100"]
+    dataset_names = ["university_crossview%100"]
     configs = data_list(dataset_names)
     for config in configs:
         print(config)

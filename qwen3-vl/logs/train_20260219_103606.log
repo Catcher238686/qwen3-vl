@@ -1,0 +1,49 @@
+You are using a model of type qwen3_vl to instantiate a model of type qwen2_5_vl. This is not supported for all configurations of models and can yield errors.
+You are attempting to use Flash Attention 2.0 with a model not initialized on GPU. Make sure to move the model to GPU after initializing it on CPU with `model.to('cuda')`.
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/home/wangcheng/project/RSCC-master/RSCC-master/qwen3-vl/qwenvl/train/train_qwen.py", line 178, in <module>
+[rank0]:     train(attn_implementation="flash_attention_2")
+[rank0]:   File "/home/wangcheng/project/RSCC-master/RSCC-master/qwen3-vl/qwenvl/train/train_qwen.py", line 106, in train
+[rank0]:     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+[rank0]:   File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/transformers/modeling_utils.py", line 272, in _wrapper
+[rank0]:     return func(*args, **kwargs)
+[rank0]:   File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/transformers/modeling_utils.py", line 4401, in from_pretrained
+[rank0]:     model = cls(config, *model_args, **model_kwargs)
+[rank0]:   File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1517, in __init__
+[rank0]:     super().__init__(config)
+[rank0]:   File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/transformers/modeling_utils.py", line 1898, in __init__
+[rank0]:     self.generation_config = GenerationConfig.from_model_config(config) if self.can_generate() else None
+[rank0]:   File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/transformers/generation/configuration_utils.py", line 1287, in from_model_config
+[rank0]:     decoder_config_dict = decoder_config.to_dict()
+[rank0]: AttributeError: 'dict' object has no attribute 'to_dict'
+[rank0]:[W219 10:36:13.316026137 ProcessGroupNCCL.cpp:1496] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+E0219 10:36:14.607000 3484701 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 3484775) of binary: /home/wangcheng/anaconda3/envs/qwenvl_ft/bin/python
+Traceback (most recent call last):
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/run.py", line 918, in main
+    run(args)
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/run.py", line 909, in run
+    elastic_launch(
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+qwenvl/train/train_qwen.py FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-02-19_10:36:14
+  host      : node01
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 3484775)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

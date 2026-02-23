@@ -1,0 +1,31 @@
+/home/wangcheng/anaconda3/envs/qwenvl_ft/bin/python: can't open file '/home/wangcheng/project/RSCC-master/RSCC-master/qwenvl/train/train_qwen.py': [Errno 2] No such file or directory
+E0219 09:40:24.254000 3317580 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 2) local_rank: 0 (pid: 3317772) of binary: /home/wangcheng/anaconda3/envs/qwenvl_ft/bin/python
+Traceback (most recent call last):
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/run.py", line 918, in main
+    run(args)
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/run.py", line 909, in run
+    elastic_launch(
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/home/wangcheng/anaconda3/envs/qwenvl_ft/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+qwenvl/train/train_qwen.py FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-02-19_09:40:24
+  host      : node01
+  rank      : 0 (local_rank: 0)
+  exitcode  : 2 (pid: 3317772)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

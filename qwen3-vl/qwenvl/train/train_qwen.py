@@ -49,29 +49,55 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer, output_dir: st
         trainer._save(output_dir, state_dict=cpu_state_dict)
 
 
+def get_visual_module(model):
+    """获取视觉模块，兼容 Qwen2-VL 和 Qwen3-VL"""
+    if hasattr(model, 'visual'):
+        return model.visual
+    elif hasattr(model, 'model') and hasattr(model.model, 'visual'):
+        return model.model.visual
+    else:
+        raise AttributeError(f"Cannot find visual module in {type(model).__name__}")
+
+
 def set_model(model_args, model):
+    visual = get_visual_module(model)
+    
+    # 冻结/解冻视觉编码器
     if model_args.tune_mm_vision:
-        for n, p in model.visual.named_parameters():
+        for n, p in visual.named_parameters():
             p.requires_grad = True
     else:
-        for n, p in model.visual.named_parameters():
+        for n, p in visual.named_parameters():
             p.requires_grad = False
 
-    if model_args.tune_mm_mlp:
-        for n, p in model.visual.merger.named_parameters():
-            p.requires_grad = True
-    else:
-        for n, p in model.visual.merger.named_parameters():
-            p.requires_grad = False
+    # 冻结/解冻 MLP 投影层 (merger 或 patch_merger)
+    merger = None
+    if hasattr(visual, 'merger'):
+        merger = visual.merger
+    elif hasattr(visual, 'patch_merger'):
+        merger = visual.patch_merger
+    
+    if merger is not None:
+        if model_args.tune_mm_mlp:
+            for n, p in merger.named_parameters():
+                p.requires_grad = True
+        else:
+            for n, p in merger.named_parameters():
+                p.requires_grad = False
 
+    # 冻结/解冻 LLM
     if model_args.tune_mm_llm:
         for n, p in model.model.named_parameters():
             p.requires_grad = True
-        model.lm_head.requires_grad = True
+        if hasattr(model, 'lm_head'):
+            for p in model.lm_head.parameters():
+                p.requires_grad = True
     else:
         for n, p in model.model.named_parameters():
             p.requires_grad = False
-        model.lm_head.requires_grad = False
+        if hasattr(model, 'lm_head'):
+            for p in model.lm_head.parameters():
+                p.requires_grad = False
 
 
 def train(attn_implementation="flash_attention_2"):
@@ -91,7 +117,10 @@ def train(attn_implementation="flash_attention_2"):
     except ImportError:
         qwen3_available = False
 
-    if qwen3_available and "qwen3" in model_args.model_name_or_path.lower():
+    model_path_lower = model_args.model_name_or_path.lower()
+    
+    if qwen3_available and "qwen3" in model_path_lower:
+        rank0_print("Loading Qwen3-VL model...")
         model = Qwen3VLForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
             cache_dir=training_args.cache_dir,
@@ -102,7 +131,8 @@ def train(attn_implementation="flash_attention_2"):
             model_args.model_name_or_path,
         ).image_processor
         data_args.model_type = "qwen3vl"
-    elif "qwen2.5" or "RSCCM" in model_args.model_name_or_path.lower():
+    elif "qwen2.5" in model_path_lower or "RSCCM" in model_path_lower:
+        rank0_print("Loading Qwen2.5-VL model...")
         model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
             cache_dir=training_args.cache_dir,
@@ -114,6 +144,7 @@ def train(attn_implementation="flash_attention_2"):
         ).image_processor
         data_args.model_type = "qwen2.5vl"
     else:
+        rank0_print("Loading Qwen2-VL model...")
         model = Qwen2VLForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
             cache_dir=training_args.cache_dir,
@@ -149,7 +180,8 @@ def train(attn_implementation="flash_attention_2"):
     set_model(model_args, model)
 
     if torch.distributed.get_rank() == 0:
-        model.visual.print_trainable_parameters()
+        visual = get_visual_module(model)
+        visual.print_trainable_parameters()
         model.model.print_trainable_parameters()
 
     data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)

@@ -1,8 +1,0 @@
-data/token_usage.json
-test/
-output/
-notebook/
-.env
-*.pyc
-logs/
-hf-datasets/

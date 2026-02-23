@@ -16,12 +16,20 @@ from transformers.models.qwen2_vl.modeling_qwen2_vl import (
     Qwen2VisionTransformerPretrainedModel,
     Qwen2VLModel,
 )
-from transformers.trainer import (
-    ALL_LAYERNORM_LAYERS,
-    get_parameter_names,
-    has_length,
-    is_sagemaker_mp_enabled,
-)
+try:
+    from transformers.trainer import (
+        ALL_LAYERNORM_LAYERS,
+        get_parameter_names,
+        has_length,
+        is_sagemaker_mp_enabled,
+    )
+except ImportError:
+    from transformers.trainer import (
+        get_parameter_names,
+        has_length,
+    )
+    is_sagemaker_mp_enabled = lambda: False
+    ALL_LAYERNORM_LAYERS = (nn.LayerNorm, nn.RMSNorm)
 from transformers.trainer_utils import seed_worker
 
 
@@ -158,15 +166,34 @@ def print_trainable_parameters_visual(self) -> None:
 
 
 def print_trainable_parameters(self) -> None:
-    is_embed_trainable = any(
-        param.requires_grad for param in self.embed_tokens.parameters()
-    )
-    print(f"LLM Module - Embed Tokens Trainable: {is_embed_trainable}")
+    # 兼容 Qwen2VL 和 Qwen3VL
+    if hasattr(self, 'embed_tokens'):
+        embed_tokens = self.embed_tokens
+    elif hasattr(self, 'model') and hasattr(self.model, 'embed_tokens'):
+        embed_tokens = self.model.embed_tokens
+    else:
+        embed_tokens = None
+    
+    if embed_tokens is not None:
+        is_embed_trainable = any(
+            param.requires_grad for param in embed_tokens.parameters()
+        )
+        print(f"LLM Module - Embed Tokens Trainable: {is_embed_trainable}")
+    else:
+        print("LLM Module - Embed Tokens: Not found (might be in different location)")
 
     trainable_layers = []
     non_trainable_layers = []
 
-    for layer_idx, layer in enumerate(self.layers):
+    # 兼容不同的 layers 位置
+    if hasattr(self, 'layers'):
+        layers = self.layers
+    elif hasattr(self, 'model') and hasattr(self.model, 'layers'):
+        layers = self.model.layers
+    else:
+        layers = []
+
+    for layer_idx, layer in enumerate(layers):
         is_trainable = any(param.requires_grad for param in layer.parameters())
         if is_trainable:
             trainable_layers.append(layer_idx)
@@ -372,12 +399,22 @@ Qwen2_5_VLModel.print_trainable_parameters = print_trainable_parameters
 
 try:
     from transformers.models.qwen3_vl.modeling_qwen3_vl import (
-        Qwen3VisionTransformerPretrainedModel,
+        Qwen3VLVisionModel,
         Qwen3VLModel,
     )
-    Qwen3VisionTransformerPretrainedModel.print_trainable_parameters = (
+    Qwen3VLVisionModel.print_trainable_parameters = (
         print_trainable_parameters_visual
     )
     Qwen3VLModel.print_trainable_parameters = print_trainable_parameters
 except ImportError:
-    pass
+    try:
+        from transformers.models.qwen3_vl.modeling_qwen3_vl import (
+            Qwen3VisionTransformerPretrainedModel,
+            Qwen3VLModel,
+        )
+        Qwen3VisionTransformerPretrainedModel.print_trainable_parameters = (
+            print_trainable_parameters_visual
+        )
+        Qwen3VLModel.print_trainable_parameters = print_trainable_parameters
+    except ImportError:
+        pass

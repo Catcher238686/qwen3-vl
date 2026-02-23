@@ -71,9 +71,15 @@ def preprocess_qwen_2_visual(
 
         input_id, target = [], []
 
-        input_id += tokenizer.apply_chat_template(
-            [{"role": "system", "content": system_message}]
+        result = tokenizer.apply_chat_template(
+            [{"role": "system", "content": system_message}], tokenize=True
         )
+        if hasattr(result, "input_ids"):
+            input_id = list(result["input_ids"])
+        elif isinstance(result, dict):
+            input_id = list(result["input_ids"])
+        else:
+            input_id = list(result)
         target += [IGNORE_INDEX] * len(input_id)
 
         for conv in source:
@@ -108,13 +114,20 @@ def preprocess_qwen_2_visual(
                     content = "".join(new_parts)
 
             conv = [{"role": role, "content": content}]
-            encode_id = tokenizer.apply_chat_template(conv)
+            result = tokenizer.apply_chat_template(conv, tokenize=True)
+            if hasattr(result, "input_ids"):
+                encode_id = list(result["input_ids"])
+            elif isinstance(result, dict):
+                encode_id = list(result["input_ids"])
+            else:
+                encode_id = list(result)
             input_id += encode_id
             if role in ["user", "system"]:
                 target += [IGNORE_INDEX] * len(encode_id)
             else:
                 target_mask = encode_id.copy()
-                target_mask[:3] = [IGNORE_INDEX] * 3
+                if len(target_mask) >= 3:
+                    target_mask[:3] = [IGNORE_INDEX] * 3
                 target += target_mask
 
         assert len(input_id) == len(target), f"{len(input_id)} != {len(target)}"

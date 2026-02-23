@@ -1,19 +1,19 @@
 # 通用权重文件后缀（覆盖大部分框架）
-*.pth        # PyTorch 权重文件
-*.pt         # PyTorch 权重文件
-*.ckpt       # PyTorch Lightning/CKPT 格式
-*.h5         # Keras/TensorFlow 权重文件
-*.hdf5       # HDF5 格式权重
-*.pb         # TensorFlow 模型文件
-*.onnx       # ONNX 格式模型
-*.safetensors # 安全张量格式（常用在AI模型）
-*.bin        # 二进制权重文件（如Transformers模型）
-*.weights    # 自定义权重后缀
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.hdf5
+*.pb
+*.onnx
+*.safetensors
+*.bin
+*.weights
 
 # 如果权重文件集中在某个目录，直接忽略整个目录（推荐）
-qwen3-vl/pretrained/Qwen3-VL-7B-Instruct   # 忽略根目录下的 weights 文件夹
-checkpoints/ # 忽略根目录下的 checkpoints 文件夹
-models/      # 忽略根目录下的 models 文件夹
+qwen3-vl/pretrained/Qwen3-VL-7B-Instruct/
+checkpoints/
+models/
 
 # 忽略特定名称的权重文件
 best_model.pth
